@@ -1,5 +1,8 @@
 const { connect, keyStores: { InMemoryKeyStore } } = require('near-api-js');
 
+const CANVAS_SCALE = 8;
+const BOARD_SIZE = 50;
+
 async function viewPixelBoard(blockId) {
     const config = require('./config')(process.env.NODE_ENV || 'development')
     // TODO: Why no default keyStore?
@@ -22,8 +25,8 @@ async function viewPixelBoard(blockId) {
 
 
     const { createCanvas } = require('canvas');
-    const scale = 8;
-    const canvas = createCanvas(50 * scale, 50 * scale);
+    const scale = CANVAS_SCALE;
+    const canvas = createCanvas(BOARD_SIZE * scale, BOARD_SIZE * scale);
     const ctx = canvas.getContext('2d');
     lines.forEach((line, y) => {
         line.forEach((color, x) => {
@@ -43,6 +46,7 @@ const Router = require('koa-router');
 const router = new Router();
 
 const SERVER_URL = 'https://wayback.berryclub.io';
+// const SERVER_URL = 'https://vg-1eb72eb9.localhost.run';
 
 router.get('/img/:blockId?', async ctx => {
     console.log(ctx.path);
@@ -71,8 +75,13 @@ router.get('/oembed', oembed(`${SERVER_URL}/board/*`), function (ctx) {
 
 router.get('/board/:blockId?', async ctx => {
     const { blockId } = ctx.params;
+    const imageUrl = `${SERVER_URL}/img/${blockId}`;
     ctx.type = 'text/html';
     ctx.body = `
+        <meta name="twitter:image:src" content="${imageUrl}">
+        <meta name="twitter:image:width" content="${BOARD_SIZE * CANVAS_SCALE}">
+        <meta name="twitter:image:height" content="${BOARD_SIZE * CANVAS_SCALE}">
+
         <style>
             p, img {
                 max-width: 90vh;
@@ -92,7 +101,7 @@ router.get('/board/:blockId?', async ctx => {
 
         <p>Made in <a href="https://berryclub.io">🥑 club</a>.
 
-        <p><img src="/img/${blockId}">
+        <p><img src="${imageUrl}">
     `;
 });
 
@@ -123,13 +132,20 @@ router.get('/:accountId?', async ctx => {
 
         ${
             accountId
-                ? `You are viewing sample of pictures where <a href="https://explorer.near.org/accounts/${accountId}">${accountId}</a> has contributed.` 
+                ? `You are viewing sample of pictures where <a href="https://explorer.near.org/accounts/${accountId}">${accountId}</a> has contributed.`
                 : `You are viewing sample of pictures made by Berry Club users.`
         }
         <p>Refresh your browser to see a different sample.
 
         ${
-            edits.map(({ block_hash }) => `<p><img src="/img/${block_hash}" width="500">`).join('\n')
+            edits.map(({ block_hash }) => {
+                const boardUrl = `${SERVER_URL}/board/${block_hash}`
+                return `
+                    <p><img src="/img/${block_hash}">
+                    <a class="twitter-share-button" href="https://twitter.com/intent/tweet?text=${
+                        encodeURIComponent(`Check out Berry Club`)}&url=${encodeURIComponent(boardUrl)}">Tweet</a>
+                `
+            }).join('\n')
         }
     `;
 });
