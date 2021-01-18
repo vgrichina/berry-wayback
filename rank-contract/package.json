@@ -6,12 +6,14 @@
   "scripts": {
     "build": "asb",
     "build:debug": "asb --target debug",
-    "test": "asp --nologo"
+    "test": "asp --nologo",
+    "dev": "nodemon -e ts -w assembly -x 'yarn test'"
   },
   "dependencies": {
     "near-sdk-as": "1.0.0"
   },
   "devDependencies": {
+    "nodemon": "^2.0.7",
     "shelljs": "^0.8.4"
   }
 }

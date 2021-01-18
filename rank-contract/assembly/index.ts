@@ -1,40 +1,29 @@
-/*
- * This is an example of an AssemblyScript smart contract with two simple,
- * symmetric functions:
- *
- * 1. setGreeting: accepts a greeting, such as "howdy", and records it for the
- *    user (account_id) who sent the request
- * 2. getGreeting: accepts an account_id and returns the greeting saved for it,
- *    defaulting to "Hello"
- *
- * Learn more about writing NEAR smart contracts with AssemblyScript:
- * https://docs.near.org/docs/roles/developer/contracts/assemblyscript
- *
- */
-
 import { Context, logging, storage } from 'near-sdk-as'
 
-const DEFAULT_MESSAGE = 'Hello'
+const NOMINATION: f64 = 100;
+const DEFAULT_ELO = 1500;
+const K = 32;
 
-// Exported functions will be part of the public interface for your smart contract.
-// Feel free to extract behavior to non-exported functions!
-export function getGreeting(accountId: string): string | null {
-  // This uses raw `storage.get`, a low-level way to interact with on-chain
-  // storage for simple contracts.
-  // If you have something more complex, check out persistent collections:
-  // https://docs.near.org/docs/roles/developer/contracts/assemblyscript#imports
-  return storage.get<string>(accountId, DEFAULT_MESSAGE)
+@nearBindgen
+class PlayerInfo {
+    id: string;
+    score: u32; 
 }
 
-export function setGreeting(message: string): void {
-  const account_id = Context.sender
+export function vote(players: PlayerInfo[]): u32[] {
+    assert(players.length == 2, 'only 2 player matches are supported');
 
-  // Use logging.log to record logs permanently to the blockchain!
-  logging.log(
-    // String interpolation (`like ${this}`) is a work in progress:
-    // https://github.com/AssemblyScript/assemblyscript/pull/1115
-    'Saving greeting "' + message + '" for account "' + account_id + '"'
-  )
+    let elo1 = getEloRating(players[0].id) / NOMINATION;
+    let elo2 = getEloRating(players[1].id) / NOMINATION;
+    let e1 = Math.pow(10, elo1 / 400.);
+    let e2 = Math.pow(10, elo2 / 400.);
 
-  storage.set(account_id, message)
+    return [
+        u32((elo1 + K * (players[0].score / NOMINATION - e1 / (e1 + e2))) * NOMINATION),
+        u32((elo2 + K * (players[1].score / NOMINATION - e2 / (e1 + e2))) * NOMINATION),
+    ];
+}
+
+export function getEloRating(playerId: string): u32 {
+    return storage.getPrimitive<u32>("elo:" + playerId, u32(DEFAULT_ELO * NOMINATION)); 
 }
