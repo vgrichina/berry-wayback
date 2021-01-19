@@ -38,4 +38,43 @@ async function findEdits(accountId) {
     })
 }
 
-module.exports = { findEdits };
+async function findRandomPair() {
+    console.log('findRandomPair');
+
+    return withPgClient(async client => {
+        const { rows } = await client.query(`
+            SELECT board_id FROM
+                (SELECT DISTINCT board_id FROM (
+                    (SELECT included_in_block_hash AS board_id
+                            FROM receipts TABLESAMPLE SYSTEM(0.05)
+                        WHERE receiver_account_id = 'berryclub.ek.near'
+                        ORDER BY random()
+                        LIMIT 100
+                    )
+                    UNION
+                    (SELECT
+                        (SELECT value->>'id'
+                            FROM json_array_elements(convert_from(decode(args->>'args_base64', 'base64'), 'UTF8')::json->'players')
+                            ORDER BY random()
+                            LIMIT 1
+                        ) AS board_id
+                        FROM receipts
+                        JOIN action_receipt_actions USING (receipt_id)
+                        WHERE receiver_account_id = 'berry-or-not.near'
+                            AND args->>'method_name' = 'vote'
+                        ORDER BY random()
+                        LIMIT 500
+                    )
+                ) AS query_union
+            ) AS unique_ids
+            ORDER BY random()
+            LIMIT 2
+        `);
+
+        console.log(`Found ${rows.length} rows`);
+        console.log('rows', rows);
+        return rows.map(({ board_id }) => board_id);
+    })
+}
+
+module.exports = { findEdits, findRandomPair };

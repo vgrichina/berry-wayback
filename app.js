@@ -131,6 +131,11 @@ router.get('/rate/:blockId1/vs/:blockId2', async ctx => {
             ${board(blockId1)}
             ${board(blockId2)}
         </div>
+
+        <p class="require-login">
+            <a href="/rate-random">Rate Another Pair</a>
+        </p>
+
         <p class="require-no-login"><a href="javascript:login()">Login with NEAR Wallet</a> to vote</p>
         <p class="require-login">You are logged in as <b class="account-name">...</b> | <a href="javascript:logout()">Logout</a></p>
 
@@ -140,6 +145,12 @@ router.get('/rate/:blockId1/vs/:blockId2', async ctx => {
 });
 
 const indexer = require('./indexer');
+
+router.get('/rate-random', async ctx => {
+    const [ id1, id2 ] = await indexer.findRandomPair();
+    ctx.redirect(`/rate/${id1}/vs/${id2}`);
+});
+
 router.get('/:accountId?', async ctx => {
     const { accountId } = ctx.params;
 

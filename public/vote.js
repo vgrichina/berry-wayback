@@ -3,6 +3,7 @@ let account;
 
 const CONTRACT_NAME = 'berry-or-not.near'
 const APP_PREFIX = CONTRACT_NAME + ':keystore:';
+const BOATLOAD_OF_GAS = '100000000000000';
 
 async function vote(event) {
     event.preventDefault();
@@ -13,7 +14,9 @@ async function vote(event) {
             id: button.value,
             score: event.target == button ? 100 : 0
         }))
-    });
+    }, BOATLOAD_OF_GAS);
+
+    window.location = '/rate-random';
 }
 
 async function login() {
@@ -24,6 +27,7 @@ async function login() {
 async function logout() {
     console.log('logout');
     await walletConnection.signOut();
+    window.location.reload();
 }
 
 (async function() {
