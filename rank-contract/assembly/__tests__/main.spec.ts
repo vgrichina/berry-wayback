@@ -14,6 +14,9 @@ describe("Ranking", () => {
         expect(scores[0]).toBe(137283);
         expect(scores[1]).toBe(112716);
 
+        expect(getEloRating("a")).toBe(137283);
+        expect(getEloRating("b")).toBe(112716);
+
         expect(rankingKey('a', 137283)).toBe('862717:a');
         expect(rankingKey('b', 112716)).toBe('887284:b');
 
