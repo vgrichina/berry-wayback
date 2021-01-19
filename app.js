@@ -103,9 +103,7 @@ router.get('/rate/:blockId1/vs/:blockId2', async ctx => {
     const board = blockId => `
         <div class="board">
             <img src="/img/${blockId}">
-            <form method="POST">
-                <button value="${blockId}">This 🍅 is juicier</button>
-            </form>
+            <button class="require-login vote" value="${blockId}" onclick="vote(event)">This 🍅 is juicier</button>
         </div>
     `;
 
@@ -133,6 +131,11 @@ router.get('/rate/:blockId1/vs/:blockId2', async ctx => {
             ${board(blockId1)}
             ${board(blockId2)}
         </div>
+        <p class="require-no-login"><a href="javascript:login()">Login with NEAR Wallet</a> to vote</p>
+        <p class="require-login">You are logged in as <b class="account-name">...</b> | <a href="javascript:logout()">Logout</a></p>
+
+        <script src='https://cdn.jsdelivr.net/npm/near-api-js@0.36.2/dist/near-api-js.js'></script>
+        <script src='/vote.js'></script>
     `;
 });
 
@@ -167,6 +170,7 @@ app
         console.log(ctx.method, ctx.path);
         await next();
     })
+    .use(require('koa-static')('public'))
     .use(router.routes())
     .use(router.allowedMethods());
 

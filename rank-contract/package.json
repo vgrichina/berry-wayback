@@ -1,11 +1,13 @@
 {
-  "name": "greeter",
+  "name": "rank-contract",
   "version": "0.0.1",
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
     "build": "asb",
     "build:debug": "asb --target debug",
+    "predeploy": "npm run build",
+    "deploy": "near deploy --accountId berry-or-not.near --wasmFile build/release/rank-contract.wasm",
     "test": "asp --nologo",
     "dev": "nodemon -e ts -w assembly -x 'yarn test'"
   },
