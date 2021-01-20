@@ -132,7 +132,7 @@ router.get('/rate/:blockId1/vs/:blockId2', async ctx => {
             ${board(blockId2)}
         </div>
 
-        <p class="require-login">
+        <p>
             <a href="/rate-random">Rate Another Pair</a>
         </p>
 
