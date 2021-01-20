@@ -1,4 +1,9 @@
-import { vote, getEloRating, getLeaderboard, rankingKey } from '..';
+import {
+    vote,
+    getEloRating,
+    // getLeaderboard,
+    rankingKey
+} from '..';
 import { storage, Context } from "near-sdk-as";
 
 describe("Ranking", () => {
@@ -20,10 +25,10 @@ describe("Ranking", () => {
         expect(rankingKey('a', 137283)).toBe('862717:a');
         expect(rankingKey('b', 112716)).toBe('887284:b');
 
-        const leaderboard = getLeaderboard();
-        expect(leaderboard[0].id).toBe('a');
-        expect(leaderboard[1].id).toBe('b');
-        expect(leaderboard[0].elo).toBe(137283);
-        expect(leaderboard[1].elo).toBe(112716);
+        // const leaderboard = getLeaderboard();
+        // expect(leaderboard[0].id).toBe('a');
+        // expect(leaderboard[1].id).toBe('b');
+        // expect(leaderboard[0].elo).toBe(137283);
+        // expect(leaderboard[1].elo).toBe(112716);
     });
 });

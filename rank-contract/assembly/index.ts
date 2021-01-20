@@ -29,11 +29,12 @@ export function vote(players: PlayerInfo[]): u32[] {
         u32((elo2 + K * (players[1].score / NOMINATION - e2 / (e1 + e2))) * NOMINATION),
     ];
 
-    let leaderboard = new AVLTree<string, string>('leaderboard');
-    leaderboard.remove(rankingKey(players[0].id, elo1u));
-    leaderboard.remove(rankingKey(players[1].id, elo2u));
-    leaderboard.set(rankingKey(players[0].id, scores[0]), players[0].id);
-    leaderboard.set(rankingKey(players[1].id, scores[1]), players[1].id);
+    // TODO: Bring back on-chain ranking once AVL tree is fixed
+    // let leaderboard = new AVLTree<string, string>('leaderboard');
+    // leaderboard.remove(rankingKey(players[0].id, elo1u));
+    // leaderboard.remove(rankingKey(players[1].id, elo2u));
+    // leaderboard.set(rankingKey(players[0].id, scores[0]), players[0].id);
+    // leaderboard.set(rankingKey(players[1].id, scores[1]), players[1].id);
 
     setEloRating(players[0].id, scores[0]);
     setEloRating(players[1].id, scores[1]);
@@ -47,14 +48,14 @@ class RankingEntry {
     elo: u32;
 }
 
-export function getLeaderboard(): RankingEntry[] {
-    let leaderboard = new AVLTree<string, string>('leaderboard');
-    // TODO: implement limit
-    return leaderboard.values('', '9999999999999999999999999').map<RankingEntry>(playerId => ({
-        id: playerId,
-        elo: getEloRating(playerId),
-    }))
-}
+// export function getLeaderboard(): RankingEntry[] {
+//     let leaderboard = new AVLTree<string, string>('leaderboard');
+//     // TODO: implement limit
+//     return leaderboard.values('', '9999999999999999999999999').map<RankingEntry>(playerId => ({
+//         id: playerId,
+//         elo: getEloRating(playerId),
+//     }))
+// }
 
 export function getEloRating(playerId: string): u32 {
     return storage.getPrimitive<u32>("elo:" + playerId, u32(DEFAULT_ELO * NOMINATION)); 
