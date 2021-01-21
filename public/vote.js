@@ -9,14 +9,20 @@ async function vote(event) {
     event.preventDefault();
     console.log('vote');
 
-    await account.functionCall(CONTRACT_NAME, 'vote', {
-        players: Array.from(document.querySelectorAll('button.vote')).map(button => ({
-            id: button.value,
-            score: event.target == button ? 100 : 0
-        }))
-    }, BOATLOAD_OF_GAS);
+    const voteButtons = Array.from(document.querySelectorAll('button.vote'));
+    try {
+        voteButtons.forEach(button => button.disabled = true)
+        await account.functionCall(CONTRACT_NAME, 'vote', {
+            players: voteButtons.map(button => ({
+                id: button.value,
+                score: event.target == button ? 100 : 0
+            }))
+        }, BOATLOAD_OF_GAS);
 
-    window.location = '/rate-random';
+        window.location.href = '/rate-random';
+    } finally {
+        voteButtons.forEach(button => button.disabled = false)
+    }
 }
 
 async function login() {
