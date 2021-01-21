@@ -131,7 +131,7 @@ router.get('/rate/:blockId1/vs/:blockId2', async ctx => {
             }
         </style>
 
-        <p>Which 🍅 is juicier?</p>
+        <p>Which 🍅 is <a href="/juiciest">juicier?</a></p>
 
         <div class="container">
             ${board(blockId1)}
@@ -165,6 +165,8 @@ router.get('/juiciest', async ctx => {
         elo: parseFloat(value.toString('utf-8')),
         boardId: key.toString('utf-8').substring('elo:'.length)
     })).sort((a, b) => b.elo - a.elo);
+
+    console.log('boards', boards);
 
     ctx.type = 'text/html';
     ctx.body = `
