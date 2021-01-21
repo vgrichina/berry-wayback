@@ -1,11 +1,17 @@
 const { connect, keyStores: { InMemoryKeyStore } } = require('near-api-js');
 
-async function viewPixelBoard(blockId) {
+async function connectNear() {
     const config = require('./config')(process.env.NODE_ENV || 'development')
     // TODO: Why no default keyStore?
     const keyStore = new InMemoryKeyStore();
     const near = await connect({...config, keyStore});
     const account = await near.account('berryclub.ek.near');
+    return { config, keyStore, near, account };
+}
+
+async function viewPixelBoard(blockId) {
+    const { account } = await connectNear();
+
     if (blockId && /^\d+$/.exec(blockId)) {
         blockId = parseInt(blockId, 10);
     }
@@ -149,6 +155,30 @@ const indexer = require('./indexer');
 router.get('/rate-random', async ctx => {
     const [ id1, id2 ] = await indexer.findRandomPair();
     ctx.redirect(`/rate/${id1}/vs/${id2}`);
+});
+
+router.get('/juiciest', async ctx => {
+    const { near } = await connectNear();
+    const account = await near.account('berry-or-not.near');
+
+    const boards = (await account.viewState('elo')).map(({ key, value }) => ({
+        elo: parseFloat(value.toString('utf-8')),
+        boardId: key.toString('utf-8').substring('elo:'.length)
+    })).sort((a, b) => b.elo - a.elo);
+
+    ctx.type = 'text/html';
+    ctx.body = `
+        ${commonStyles}
+
+        <p>Welcome to <a href="https://berryclub.io">🥑 club</a> time machine.
+
+        <p>You are viewing the juiciest pictures made by Berry Club users.<p>
+        <p><a href="/rate-random">Vote for best pictures</a>
+
+        ${
+            boards.map(({ boardId }) => `<p><img src="/img/${boardId}" width="500">`).join('\n')
+        }
+    `;
 });
 
 router.get('/:accountId?', async ctx => {
