@@ -9,23 +9,43 @@ async function connectNear() {
     return { config, keyStore, near, account };
 }
 
+const BoardHeight = 50;
+const BoardWidth = 50;
+const ExpectedLineLength = 4 + 8 * BoardWidth;
+
+const decodeLine = (line) => {
+    let buf = Buffer.from(line, 'base64');
+    if (buf.length !== ExpectedLineLength) {
+        throw new Error("Unexpected encoded line length");
+    }
+    let pixels = []
+    for (let i = 4; i < buf.length; i += 8) {
+        let color = buf.readUInt32LE(i);
+        // let ownerIndex = buf.readUInt32LE(i + 4);
+        pixels.push(color);
+    }
+    return pixels;
+};
+const intToColor = (c) => `#${c.toString(16).padStart(6, '0')}`;
+
 async function viewPixelBoard(blockId) {
     const { account } = await connectNear();
 
     if (blockId && /^\d+$/.exec(blockId)) {
         blockId = parseInt(blockId, 10);
     }
-    const pixelsState = await account.viewState('p', blockId ? { blockId } : null);
-    const lines = pixelsState.map(({key, value}) => {
-        const linePixels = value.slice(4);
-        const width = linePixels.length / 8;
-        const lineColors = [];
-        for (let i = 0; i < width; i++) {
-            lineColors.push(linePixels.slice(i * 8, i * 8 + 3).reverse().toString('hex'));
-        }
-        return lineColors;
-    });
 
+    const args = {lines: [...Array(BoardHeight).keys()]};
+    const rawResult = await account.connection.provider.query({
+        request_type: 'call_function',
+        block_id: blockId,
+        finality: blockId ? undefined : 'optimistic',
+        account_id: account.accountId,
+        method_name: 'get_lines',
+        args_base64: Buffer.from(JSON.stringify(args), 'utf8').toString('base64'),
+    });
+    const result = rawResult.result && rawResult.result.length > 0 && JSON.parse(Buffer.from(rawResult.result).toString());
+    const lines = result.map(decodeLine);
 
     const { createCanvas } = require('canvas');
     const scale = 8;
@@ -33,7 +53,7 @@ async function viewPixelBoard(blockId) {
     const ctx = canvas.getContext('2d');
     lines.forEach((line, y) => {
         line.forEach((color, x) => {
-            ctx.fillStyle = `#${color}`;
+            ctx.fillStyle = intToColor(color);
             ctx.fillRect(x * scale, y * scale, scale, scale);
         });
     });
